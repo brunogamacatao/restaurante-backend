@@ -23,4 +23,4 @@ app.use(express.json())
 app.use('/produtos', require('./rotas/produtos'))
 
 // Inicia o servidor web
-app.listen(3000, () => console.log('servidor iniciado com sucesso'))
+app.listen(5000, () => console.log('servidor iniciado com sucesso'))

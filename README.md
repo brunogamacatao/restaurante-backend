@@ -20,4 +20,4 @@ cd restaurante-backend
 npm
 npm start
 ```
-O servidor executará na porta 3000
+O servidor executará na porta 5000
