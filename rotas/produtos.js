@@ -44,6 +44,11 @@ router.post('/', async (req, res) => {
   res.status(201).json(novoProduto);
 })
 
+// remove um produto
+router.delete('/:id', getProduto, async (req, res) => {
+  await res.produto.remove()
+})
+
 // atualiza um produto pelo id
 router.patch('/:id', getProduto, async (req, res) => {
   res.produto.nome = req.produto.nome;
@@ -52,11 +57,6 @@ router.patch('/:id', getProduto, async (req, res) => {
   res.produto.foto = req.produto.foto;
   const produtoAtualizado = await res.produto.save();
   res.json(produtoAtualizado);
-})
-
-// remove um produto
-router.delete('/:id', getProduto, async (req, res) => {
-  await res.produto.remove()
 })
 
 module.exports = router
