@@ -13,7 +13,7 @@ async function getProduto(req, res, next) {
     return res.status(500).json({ message: err.message })
   }
 
-  next()
+  next();
 }
 
 // inicializa o banco com dados de teste

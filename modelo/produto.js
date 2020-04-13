@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const produtoSchema = new mongoose.Schema({
   nome: String,
@@ -7,4 +7,4 @@ const produtoSchema = new mongoose.Schema({
   foto: String,
 });
 
-module.exports = mongoose.model('Produto', produtoSchema)
+module.exports = mongoose.model('Produto', produtoSchema);

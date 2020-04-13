@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 // Conecta ao banco de dados
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true })
@@ -32,7 +33,7 @@ app.use('/produtos', require('./rotas/produtos'));
 app.use('/cozinha', require('./rotas/cozinha')(io));
 
 // Autenticação com JWT
-app.post('/login', (req, res, next) => {
+app.post('/login', (req, res) => {
   if (req.body.login === 'admin' && req.body.password === 'admin'){
     const payload = { // posso passar qq informação para o cliente
       id: 1,
@@ -51,6 +52,40 @@ app.post('/login', (req, res, next) => {
 
 app.get('/logout', function(req, res) {
   res.status(200).send({ auth: false, token: null });
+});
+
+// Autenticação com JWT + Banco de Dados
+const BCRYPT_SALT_ROUNDS = parseInt(process.env.SALT_ROUNDS);
+const Usuario = require('./modelo/usuario');
+
+app.post('/register', async (req, res) => {
+  var login = req.body.login;
+  var password = req.body.password;
+
+  let hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+  let usuario = await new Usuario({login: login, senha: hashedPassword}).save();
+
+  res.json(usuario);
+});
+
+app.post('/login_db', async (req, res) => {
+  let usuario = await Usuario.findOne({login: req.body.login});
+
+  if (!usuario) {
+    res.status(500).send('Não foi encontrado um usuário com o login informado!');
+  } else if (bcrypt.compare(req.body.password, usuario.senha)) {
+    let payload = {
+      id: usuario._id,
+      login: usuario.login
+    };
+    var token = jwt.sign(payload, process.env.SECRET, {
+      expiresIn: 300 // expira em 5 minutos (300 segundos)
+    });
+
+    res.status(200).send({ auth: true, token: token });
+  } else {
+    res.status(500).send('Login inválido!');
+  }
 });
 
 // Criando uma função de middleware para checar o token
