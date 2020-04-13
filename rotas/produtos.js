@@ -1,5 +1,5 @@
-const express = require('express')
-const router = express.Router()
+const express = require('express');
+const router = express.Router();
 const Produto = require('../modelo/produto');
 
 // função de middleware para recuperar um produto pelo id
@@ -50,7 +50,7 @@ router.delete('/:id', getProduto, async (req, res) => {
 })
 
 // atualiza um produto pelo id
-router.patch('/:id', getProduto, async (req, res) => {
+router.put('/:id', getProduto, async (req, res) => {
   res.produto.nome = req.produto.nome;
   res.produto.valor = req.produto.valor;
   res.produto.tipo = req.produto.tipo;
@@ -59,4 +59,4 @@ router.patch('/:id', getProduto, async (req, res) => {
   res.json(produtoAtualizado);
 })
 
-module.exports = router
+module.exports = router;
