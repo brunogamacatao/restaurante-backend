@@ -46,7 +46,7 @@ app.post('/login', (req, res) => {
 
     res.status(200).send({ auth: true, token: token });
   } else {
-    res.status(500).send('Login inválido!');
+    res.status(401).send('Login inválido!');
   }
 });
 
@@ -72,8 +72,8 @@ app.post('/login_db', async (req, res) => {
   let usuario = await Usuario.findOne({login: req.body.login});
 
   if (!usuario) {
-    res.status(500).send('Não foi encontrado um usuário com o login informado!');
-  } else if (bcrypt.compare(req.body.password, usuario.senha)) {
+    res.status(401).send('Não foi encontrado um usuário com o login informado!');
+  } else if (await bcrypt.compare(req.body.password, usuario.senha)) {
     let payload = {
       id: usuario._id,
       login: usuario.login
@@ -84,7 +84,7 @@ app.post('/login_db', async (req, res) => {
 
     res.status(200).send({ auth: true, token: token });
   } else {
-    res.status(500).send('Login inválido!');
+    res.status(401).send('Senha inválida!');
   }
 });
 
@@ -92,15 +92,15 @@ app.post('/login_db', async (req, res) => {
 const verificaTokenJWT = (req, res, next) => {
   let token = req.headers['x-access-token'] || req.headers['authorization'];
 
-  if (token.startsWith('Bearer ')) {
-    token = token.slice(7, token.length);
-  }
-
   if (!token) {
     return res.status(401).send({ 
       auth: false, 
       message: 'Não foi encontrado o token.' 
     });
+  }
+
+  if (token.startsWith('Bearer ')) {
+    token = token.slice(7, token.length);
   }
   
   jwt.verify(token, process.env.SECRET, (err, decoded) => {
@@ -119,7 +119,7 @@ const verificaTokenJWT = (req, res, next) => {
 
 // Criando algumas rotas seguras
 app.get('/privado', verificaTokenJWT, (req, res, next) => {
-  res.send('Deu certo !');
+  res.send('Deu certo ! - userId: ' + req.userId);
 });
 
 // Respondendo a eventos do Socket.IO
