@@ -30,6 +30,7 @@ app.get('/', (req, res) => {
   res.send('Backend do Restaurante - Node.JS + MongoDB');
 });
 app.use('/produtos', require('./rotas/produtos'));
+app.use('/pedidos', require('./rotas/pedidos'));
 app.use('/cozinha', require('./rotas/cozinha')(io));
 
 // Autenticação com JWT
