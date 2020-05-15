@@ -8,6 +8,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const bodyParser = require('body-parser');
 
 // Conecta ao banco de dados
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true })
@@ -24,6 +25,8 @@ const io = require('socket.io')(http);
 app.use(cors()); // permite requisições CORS de qualquer host
 app.use(cookieParser()); // processa os cookies do cabeçalho e popula req.cookies com um objeto onde os nomes dos cookies são as chaves
 app.use(express.json()); // se o corpo da requisição é json, popula um objeto req.body com seu valor
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 // Configura os roteamentos
 app.get('/', (req, res) => {

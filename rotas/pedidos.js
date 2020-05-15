@@ -5,15 +5,33 @@ const express = require('express');
 const router = express.Router();
 const Pedido = require('../modelo/pedido');
 const Produto = require('../modelo/produto');
+const constantes = require('../util/constantes');
 
-const TOKEN = process.env.PAGSEGURO_TOKEN;
+const TOKEN          = process.env.PAGSEGURO_TOKEN;
 const EMAIL_VENDEDOR = process.env.EMAIL_VENDEDOR;
 const HOST_PAGSEGURO = process.env.HOST_PAGSEGURO;
-const PATH_CHECKOUT = `/v2/checkout?email=${encodeURIComponent(EMAIL_VENDEDOR)}&token=${TOKEN}`;
+const PATH_CHECKOUT  = `/v2/checkout?email=${encodeURIComponent(EMAIL_VENDEDOR)}&token=${TOKEN}`;
 
 // retorna todos os pedidos
 router.get('/', async (req, res) => {
   res.json(await Pedido.find());
+});
+
+// notificação do PagSeguro sobre o estado de um serviço
+router.post('/notifica', (req, res) => {
+  fetchTransactionDetails(req.body.notificationCode)
+  .then(transaction => {
+    updateTransaction(transaction)
+    .then(tr => {
+      res.status(200).send('ok');
+    })
+    .catch(err => {
+      res.status(500).json(error);
+    });
+  })
+  .catch(error => {
+    res.status(500).json(error);
+  });
 });
 
 // retorna um pedido pelo id
@@ -33,7 +51,7 @@ router.post('/', async (req, res) => {
     email: EMAIL_VENDEDOR,
     token: TOKEN,
     currency: 'BRL',
-    reference: pedido._id,
+    reference: '' + pedido._id,
     senderName: 'Jose Comprador',
     senderAreaCode: '11',
     senderPhone: '56713293',
@@ -121,5 +139,53 @@ async function getPedido(req, res, next) {
 
   next();
 };
+
+function fetchTransactionDetails(notificationCode) {
+  const transaction_url = `/v3/transactions/notifications/${notificationCode}?email=${EMAIL_VENDEDOR}&token=${TOKEN}`;
+
+  const options = {
+    'method': 'GET',
+    'hostname': HOST_PAGSEGURO,
+    'path': transaction_url,
+    'maxRedirects': 20
+  };
+
+  return new Promise((resolve, reject) => {
+    const fetchDetails = https.request(options, (r) => {
+      let chunks = [];
+  
+      r.on("data", (chunk) => {
+        chunks.push(chunk);
+      });
+  
+      r.on("end", (chunk) => {
+        let body = Buffer.concat(chunks);
+        let xmlData = body.toString();
+        let jsonData = parser.parse(xmlData);
+        resolve(jsonData.transaction);
+      });
+  
+      r.on("error", (error) => {
+        reject(error);
+      });
+    });
+  
+    fetchDetails.write('');
+    fetchDetails.end();
+  });
+}
+
+async function updateTransaction(transaction) {
+  let pedido = await Pedido.findById(transaction.reference);
+
+  pedido.transaction_id = transaction.code;
+  pedido.estado = constantes.STATUS_TRANSACAO[parseInt(transaction.status)];
+
+  console.log('atualizando transação:', transaction.reference);
+  console.log('\tpedido:', transaction.reference);
+  console.log('\t\tnovo status:', pedido.estado);
+
+  return await pedido.save();
+}
 
 module.exports = router;
