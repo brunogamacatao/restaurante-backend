@@ -6,20 +6,20 @@ const router = express.Router();
 const Pedido = require('../modelo/pedido');
 const Produto = require('../modelo/produto');
 
-const TOKEN = '8B2E0E69AB45454AB8D48388C8984BD5';
-const EMAIL_VENDEDOR = 'brunogamacatao@gmail.com';
-const HOST_PAGSEGURO = 'ws.sandbox.pagseguro.uol.com.br';
+const TOKEN = process.env.PAGSEGURO_TOKEN;
+const EMAIL_VENDEDOR = process.env.EMAIL_VENDEDOR;
+const HOST_PAGSEGURO = process.env.HOST_PAGSEGURO;
 const PATH_CHECKOUT = `/v2/checkout?email=${encodeURIComponent(EMAIL_VENDEDOR)}&token=${TOKEN}`;
 
 // retorna todos os pedidos
 router.get('/', async (req, res) => {
   res.json(await Pedido.find());
-})
+});
 
 // retorna um pedido pelo id
 router.get('/:id', getPedido, async (req, res) => {
   res.json(res.pedido);
-})
+});
 
 // cria um pedido
 router.post('/', async (req, res) => {
@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
     senderPhone: '56713293',
     senderCPF: '38440987803',
     senderBornDate: '12/03/1990',
-    senderEmail: 'email@sandbox.pagseguro.com.br',
+    senderEmail: 'c48953660405959251800@sandbox.pagseguro.com.br',
     shippingType: '3',
     shippingCost: '0.00',
     shippingAddressStreet: 'Av. Brig. Faria Lima',
@@ -101,12 +101,12 @@ router.post('/', async (req, res) => {
 // remove um pedido
 router.delete('/:id', getPedido, async (req, res) => {
   await res.pedido.remove();
-})
+});
 
 // atualiza um pedido pelo id
 router.put('/:id', getPedido, async (req, res) => {
   await req.pedido.set(req.body).save();
-})
+});
 
 // função de middleware para recuperar um pedido pelo id
 async function getPedido(req, res, next) {
@@ -120,6 +120,6 @@ async function getPedido(req, res, next) {
   }
 
   next();
-}
+};
 
 module.exports = router;
